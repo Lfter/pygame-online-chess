@@ -1,4 +1,6 @@
 .venv/
+.venv_from_pyqt_runtime_backup/
+.tools/
 __pycache__/
 .pytest_cache/
 *.pyc

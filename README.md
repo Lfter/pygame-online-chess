@@ -18,26 +18,17 @@
 - `assets/themes/default/` 默认占位主题与音效
 - `tests/` 单元测试与集成测试
 
-## Python 3.12 虚拟环境
+## 项目独立运行时
 
-当前仓库默认复用现有 3.12 运行时路径。
+本项目已在仓库内自带运行时目录：`.tools/python312`。
+
+不再依赖其他项目路径。你只需要在本仓库内操作。
+
+## 一键准备虚拟环境
 
 ```bash
 cd /Users/ltzz/Desktop/Python/pygame-online-chess
-
-DYLD_FRAMEWORK_PATH="/Users/ltzz/Desktop/Python/pyqt-premiere-subtitle-xml-converter/.tools/python312" \
-DYLD_LIBRARY_PATH="/Users/ltzz/Desktop/Python/pyqt-premiere-subtitle-xml-converter/.tools/python312/Python.framework/Versions/3.12/lib" \
-PYTHONHOME="/Users/ltzz/Desktop/Python/pyqt-premiere-subtitle-xml-converter/.tools/python312/Python.framework/Versions/3.12" \
-/Users/ltzz/Desktop/Python/pyqt-premiere-subtitle-xml-converter/.tools/python312/Python.framework/Versions/3.12/bin/python3.12 -m venv .venv
-```
-
-安装依赖：
-
-```bash
-DYLD_FRAMEWORK_PATH="/Users/ltzz/Desktop/Python/pyqt-premiere-subtitle-xml-converter/.tools/python312" \
-DYLD_LIBRARY_PATH="/Users/ltzz/Desktop/Python/pyqt-premiere-subtitle-xml-converter/.tools/python312/Python.framework/Versions/3.12/lib" \
-PYTHONHOME="/Users/ltzz/Desktop/Python/pyqt-premiere-subtitle-xml-converter/.tools/python312/Python.framework/Versions/3.12" \
-.venv/bin/pip install -r requirements.txt
+./scripts/bootstrap_venv.sh
 ```
 
 ## 启动方式
@@ -45,19 +36,21 @@ PYTHONHOME="/Users/ltzz/Desktop/Python/pyqt-premiere-subtitle-xml-converter/.too
 启动服务器：
 
 ```bash
-DYLD_FRAMEWORK_PATH="/Users/ltzz/Desktop/Python/pyqt-premiere-subtitle-xml-converter/.tools/python312" \
-DYLD_LIBRARY_PATH="/Users/ltzz/Desktop/Python/pyqt-premiere-subtitle-xml-converter/.tools/python312/Python.framework/Versions/3.12/lib" \
-PYTHONHOME="/Users/ltzz/Desktop/Python/pyqt-premiere-subtitle-xml-converter/.tools/python312/Python.framework/Versions/3.12" \
-.venv/bin/python -m server.app --host 0.0.0.0 --port 8765
+cd /Users/ltzz/Desktop/Python/pygame-online-chess
+./scripts/run_server.sh
+```
+
+可选自定义监听地址：
+
+```bash
+./scripts/run_server.sh --host 0.0.0.0 --port 8765
 ```
 
 启动客户端：
 
 ```bash
-DYLD_FRAMEWORK_PATH="/Users/ltzz/Desktop/Python/pyqt-premiere-subtitle-xml-converter/.tools/python312" \
-DYLD_LIBRARY_PATH="/Users/ltzz/Desktop/Python/pyqt-premiere-subtitle-xml-converter/.tools/python312/Python.framework/Versions/3.12/lib" \
-PYTHONHOME="/Users/ltzz/Desktop/Python/pyqt-premiere-subtitle-xml-converter/.tools/python312/Python.framework/Versions/3.12" \
-.venv/bin/python -m client.app --root /Users/ltzz/Desktop/Python/pygame-online-chess
+cd /Users/ltzz/Desktop/Python/pygame-online-chess
+./scripts/run_client.sh
 ```
 
 ## 联机模式说明
@@ -97,10 +90,8 @@ PYTHONHOME="/Users/ltzz/Desktop/Python/pyqt-premiere-subtitle-xml-converter/.too
 ## 测试
 
 ```bash
-DYLD_FRAMEWORK_PATH="/Users/ltzz/Desktop/Python/pyqt-premiere-subtitle-xml-converter/.tools/python312" \
-DYLD_LIBRARY_PATH="/Users/ltzz/Desktop/Python/pyqt-premiere-subtitle-xml-converter/.tools/python312/Python.framework/Versions/3.12/lib" \
-PYTHONHOME="/Users/ltzz/Desktop/Python/pyqt-premiere-subtitle-xml-converter/.tools/python312/Python.framework/Versions/3.12" \
-.venv/bin/pytest
+cd /Users/ltzz/Desktop/Python/pygame-online-chess
+./scripts/run_tests.sh
 ```
 
 ## 素材与外观扩展
