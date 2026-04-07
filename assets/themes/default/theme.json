@@ -11,7 +11,10 @@
     "legal_hint": [35, 180, 90],
     "last_move": [255, 121, 89],
     "text": [248, 249, 250],
-    "panel_bg": [35, 46, 60]
+    "panel_bg": [35, 46, 60],
+    "piece_white": [248, 249, 250],
+    "piece_black": [26, 34, 44],
+    "piece_outline": [18, 22, 28]
   },
   "pieces": {
     "piece.white.king": "♔",

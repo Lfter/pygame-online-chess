@@ -68,8 +68,16 @@ def draw_board(
     last_move: chess.Move | None,
     flipped: bool,
     piece_font: pygame.font.Font,
+    use_unicode_pieces: bool = True,
+    piece_style: dict[str, tuple[int, int, int]] | None = None,
 ) -> None:
     legal_target_set = set(legal_targets)
+    piece_style = piece_style or {
+        "white": theme.text,
+        "black": (20, 20, 20),
+        "outline": (0, 0, 0),
+    }
+
     for rank in range(8):
         for file_idx in range(8):
             square = chess.square(file_idx, rank)
@@ -89,12 +97,26 @@ def draw_board(
             piece = board.piece_at(square)
             if piece is None:
                 continue
+
             color_key = "white" if piece.color == chess.WHITE else "black"
             piece_key = f"piece.{color_key}.{piece.piece_type}"
-            symbol = piece_symbols.get(piece_key, piece.symbol())
-            label = piece_font.render(symbol, True, theme.text)
-            label_rect = label.get_rect(center=rect.center)
-            screen.blit(label, label_rect)
+
+            if use_unicode_pieces:
+                symbol = piece_symbols.get(piece_key, piece.unicode_symbol())
+            else:
+                # ASCII fallback keeps piece types and colors distinguishable.
+                symbol = piece.symbol()
+
+            fill_color = piece_style["white"] if piece.color == chess.WHITE else piece_style["black"]
+            outline_color = piece_style["outline"]
+
+            outline = piece_font.render(symbol, True, outline_color)
+            base = piece_font.render(symbol, True, fill_color)
+            base_rect = base.get_rect(center=rect.center)
+
+            for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                screen.blit(outline, base_rect.move(dx, dy))
+            screen.blit(base, base_rect)
 
 
 def draw_panel(

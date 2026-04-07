@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 from pathlib import Path
@@ -28,6 +29,36 @@ PIECE_NAME = {
     chess.KING: "king",
 }
 
+SYSTEM_UI_FONT_CANDIDATES = [
+    "Hiragino Sans GB",
+    "PingFang SC",
+    "Microsoft YaHei",
+    "Noto Sans CJK SC",
+    "Noto Sans SC",
+    "Arial Unicode MS",
+    "Arial",
+]
+
+SYSTEM_PIECE_FONT_CANDIDATES = [
+    "Apple Symbols",
+    "Arial Unicode MS",
+    "Noto Sans Symbols 2",
+    "Noto Sans Symbols",
+    "DejaVu Sans",
+    "Arial",
+]
+
+BUNDLED_UI_FONT_FILES = [
+    "NotoSansCJKsc-Regular.otf",
+    "NotoSansSC-Regular.otf",
+]
+
+BUNDLED_PIECE_FONT_FILES = [
+    "NotoSansSymbols2-Regular.ttf",
+    "NotoSansSymbols-Regular.ttf",
+    "NotoSansCJKsc-Regular.otf",
+]
+
 DEFAULT_THEME: dict[str, Any] = {
     "colors": {
         "background": [26, 34, 44],
@@ -38,6 +69,9 @@ DEFAULT_THEME: dict[str, Any] = {
         "last_move": [255, 121, 89],
         "text": [248, 249, 250],
         "panel_bg": [35, 46, 60],
+        "piece_white": [248, 249, 250],
+        "piece_black": [26, 34, 44],
+        "piece_outline": [18, 22, 28],
     },
     "pieces": {
         "piece.white.king": "♔",
@@ -60,6 +94,21 @@ DEFAULT_THEME: dict[str, Any] = {
     },
 }
 
+ASCII_PIECES: dict[str, str] = {
+    "piece.white.king": "K",
+    "piece.white.queen": "Q",
+    "piece.white.rook": "R",
+    "piece.white.bishop": "B",
+    "piece.white.knight": "N",
+    "piece.white.pawn": "P",
+    "piece.black.king": "k",
+    "piece.black.queen": "q",
+    "piece.black.rook": "r",
+    "piece.black.bishop": "b",
+    "piece.black.knight": "n",
+    "piece.black.pawn": "p",
+}
+
 
 def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
     out = dict(base)
@@ -76,8 +125,10 @@ class ThemeManager:
         self.project_root = project_root
         self.theme_name = theme_name
         self.audio_enabled = audio_enabled
+        self.fonts_root = self.project_root / "assets" / "fonts"
         self.theme_data = self._load_theme(theme_name)
         self._sound_cache: dict[str, Any] = {}
+        self._unicode_piece_supported = True
 
     def _theme_path(self, theme_name: str) -> Path:
         return self.project_root / "assets" / "themes" / theme_name / "theme.json"
@@ -114,6 +165,13 @@ class ThemeManager:
             raw = DEFAULT_THEME["colors"][key]
         return (int(raw[0]), int(raw[1]), int(raw[2]))
 
+    def piece_style(self) -> dict[str, tuple[int, int, int]]:
+        return {
+            "white": self.get_color("piece_white"),
+            "black": self.get_color("piece_black"),
+            "outline": self.get_color("piece_outline"),
+        }
+
     def ui_theme(self) -> UiTheme:
         return UiTheme(
             light_square=self.get_color("light_square"),
@@ -128,16 +186,92 @@ class ThemeManager:
     def background_color(self) -> tuple[int, int, int]:
         return self.get_color("background")
 
-    def piece_symbols(self) -> dict[str, str]:
+    def _resolve_font_path(
+        self,
+        system_candidates: list[str],
+        bundled_candidates: list[str],
+    ) -> Path | None:
+        if pygame is None:
+            return None
+
+        for name in system_candidates:
+            matched = pygame.font.match_font(name)
+            if matched and Path(matched).exists():
+                return Path(matched)
+
+        for file_name in bundled_candidates:
+            path = self.fonts_root / file_name
+            if path.exists():
+                return path
+
+        return None
+
+    def _load_font(
+        self,
+        size: int,
+        system_candidates: list[str],
+        bundled_candidates: list[str],
+    ) -> Any:
+        if pygame is None:
+            raise RuntimeError("pygame_not_available")
+
+        if not pygame.font.get_init():
+            pygame.font.init()
+
+        resolved = self._resolve_font_path(system_candidates, bundled_candidates)
+        if resolved is None:
+            LOGGER.warning("No configured fonts found; using pygame default font")
+            return pygame.font.Font(None, size)
+
+        return pygame.font.Font(str(resolved), size)
+
+    def _supports_unicode_piece_glyphs(self, font: Any) -> bool:
+        if pygame is None:
+            return False
+
+        sample = ["♔", "♚", "♙", "♟", "♞", "♕"]
+        metrics = font.metrics("".join(sample))
+        if not metrics or any(metric is None for metric in metrics):
+            return False
+
+        signatures: set[str] = set()
+        for glyph in sample:
+            rendered = font.render(glyph, True, (255, 255, 255))
+            raw = pygame.image.tostring(rendered, "RGBA")
+            signatures.add(hashlib.sha1(raw).hexdigest())
+
+        # Missing-glyph fallback often renders every symbol to identical tofu.
+        return len(signatures) >= 4
+
+    def load_fonts(self, ui_size: int = 24, panel_size: int = 20, piece_size: int = 52) -> tuple[Any, Any, Any]:
+        ui_font = self._load_font(ui_size, SYSTEM_UI_FONT_CANDIDATES, BUNDLED_UI_FONT_FILES)
+        panel_font = self._load_font(panel_size, SYSTEM_UI_FONT_CANDIDATES, BUNDLED_UI_FONT_FILES)
+        piece_font = self._load_font(piece_size, SYSTEM_PIECE_FONT_CANDIDATES, BUNDLED_PIECE_FONT_FILES)
+        self._unicode_piece_supported = self._supports_unicode_piece_glyphs(piece_font)
+        return ui_font, panel_font, piece_font
+
+    def unicode_piece_supported(self) -> bool:
+        return self._unicode_piece_supported
+
+    def piece_symbols(self, use_unicode: bool = True) -> dict[str, str]:
         mapping: dict[str, str] = {}
-        piece_data = self.theme_data.get("pieces", {})
+        if use_unicode:
+            piece_data = self.theme_data.get("pieces", {})
+            for color in ("white", "black"):
+                for piece_type, piece_name in PIECE_NAME.items():
+                    key = f"piece.{color}.{piece_name}"
+                    symbol = piece_data.get(key, DEFAULT_THEME["pieces"][key])
+                    mapping[key] = str(symbol)
+                    # Backward-compatible numeric key for rendering helper.
+                    mapping[f"piece.{color}.{piece_type}"] = str(symbol)
+            return mapping
+
         for color in ("white", "black"):
             for piece_type, piece_name in PIECE_NAME.items():
                 key = f"piece.{color}.{piece_name}"
-                symbol = piece_data.get(key, DEFAULT_THEME["pieces"][key])
-                mapping[key] = str(symbol)
-                # Backward-compatible numeric key for rendering helper.
-                mapping[f"piece.{color}.{piece_type}"] = str(symbol)
+                symbol = ASCII_PIECES[key]
+                mapping[key] = symbol
+                mapping[f"piece.{color}.{piece_type}"] = symbol
         return mapping
 
     def _resolve_audio_path(self, key: str) -> Path | None:

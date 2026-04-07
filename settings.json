@@ -16,7 +16,7 @@
   "ai": {
     "mode": "simple",
     "simple_depth": 2,
-    "stockfish_path": "",
+    "stockfish_path": "/Users/ltzz/Desktop/Python/pygame-online-chess/assets/engines/stockfish/bin/macos-arm64/stockfish",
     "stockfish_movetime_ms": 350,
     "manual_fallback": true
   },
@@ -29,10 +29,22 @@
     "base_seconds": 300,
     "increment_seconds": 3,
     "presets": [
-      [180, 0],
-      [300, 3],
-      [600, 5],
-      [900, 10]
+      [
+        180,
+        0
+      ],
+      [
+        300,
+        3
+      ],
+      [
+        600,
+        5
+      ],
+      [
+        900,
+        10
+      ]
     ]
   }
 }

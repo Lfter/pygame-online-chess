@@ -16,6 +16,7 @@
 - `ai/` Stockfish 引擎接入与简易 AI
 - `shared/` 协议、DTO、错误码
 - `assets/themes/default/` 默认占位主题与音效
+- `assets/engines/stockfish/` 内嵌 Stockfish 资源（压缩包 + 首次运行自动解压）
 - `tests/` 单元测试与集成测试
 
 ## 项目独立运行时
@@ -84,8 +85,10 @@ cd /Users/ltzz/Desktop/Python/pygame-online-chess
 编辑 `settings.json`：
 
 - `ai.mode`: `simple` / `stockfish` / `auto`
-- `ai.stockfish_path`: 本机 Stockfish 可执行文件路径（留空时会自动探测 `PATH` 与常见安装位置）
+- `ai.stockfish_path`: 手动指定 Stockfish 可执行文件路径（可留空）
 - `ai.manual_fallback`: `true` 时，Stockfish 缺失将报错提示；`false` 时自动回退简易 AI
+
+当前版本默认内嵌 `Stockfish 18`（macOS Apple Silicon）压缩包，客户端启动时会优先自动解压并使用内嵌引擎；若内嵌引擎不可用，再回退到 `PATH` 与常见系统路径探测。
 
 ## 测试
 
@@ -99,3 +102,4 @@ cd /Users/ltzz/Desktop/Python/pygame-online-chess
 - 默认主题位于 `assets/themes/default/theme.json`
 - 可新建 `assets/themes/<theme_name>/theme.json` 与同名音效资源进行替换
 - 缺失字段自动回退默认主题，保证运行稳定
+- 字体兜底位于 `assets/fonts/`（中文与棋子符号）

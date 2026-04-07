@@ -12,7 +12,7 @@ import pygame
 
 from ai.factory import AIOrchestrator
 from ai.stockfish_engine import detect_stockfish_path
-from client.board_ui import BOARD_ORIGIN, BOARD_SIZE, draw_board, draw_panel, square_at_pos
+from client.board_ui import draw_board, draw_panel, square_at_pos
 from client.network_client import NetworkClient
 from client.settings import load_settings, save_settings
 from client.theme import ThemeManager
@@ -39,10 +39,6 @@ class ChessClientApp:
         pygame.display.set_caption("Pygame Online Chess")
         self.clock = pygame.time.Clock()
 
-        self.font = pygame.font.SysFont("PingFang SC,Microsoft YaHei", 24)
-        self.small_font = pygame.font.SysFont("PingFang SC,Microsoft YaHei", 20)
-        self.piece_font = pygame.font.SysFont("Arial Unicode MS", 52)
-
         theme_name = self.settings.get("theme", {}).get("name", "default")
         audio_enabled = bool(self.settings.get("audio", {}).get("enabled", True))
         self.theme_manager = ThemeManager(project_root, theme_name=theme_name, audio_enabled=audio_enabled)
@@ -50,6 +46,16 @@ class ChessClientApp:
         self.running = True
         self.mode = "menu"
         self.messages: list[str] = []
+
+        self.font, self.small_font, self.piece_font = self.theme_manager.load_fonts(
+            ui_size=24,
+            panel_size=20,
+            piece_size=52,
+        )
+        self.use_unicode_pieces = self.theme_manager.unicode_piece_supported()
+        if not self.use_unicode_pieces:
+            self.log("提示：当前环境缺少棋子符号字形，已自动回退为字母棋子。")
+
         self._autodetect_stockfish_path()
 
         self.game = ChessGame()
@@ -91,14 +97,25 @@ class ChessClientApp:
     def _autodetect_stockfish_path(self) -> None:
         ai_settings = self.settings.setdefault("ai", {})
         configured = str(ai_settings.get("stockfish_path", ""))
-        detected = detect_stockfish_path(configured)
+        detected = detect_stockfish_path(configured, project_root=self.project_root)
         if configured.strip():
-            if not detected:
-                self.log("警告：已配置的 Stockfish 路径不存在，请检查 settings.json")
+            configured_path = str(Path(configured).expanduser())
+            if detected:
+                if detected != configured_path:
+                    ai_settings["stockfish_path"] = detected
+                    self.log(f"提示：已回退到可用 Stockfish: {detected}")
+                return
+            else:
+                self.log("警告：已配置的 Stockfish 路径不可用，且未找到内置/系统引擎。")
             return
         if detected:
             ai_settings["stockfish_path"] = detected
-            self.log(f"已自动探测到 Stockfish: {detected}")
+            stockfish_bin_marker = "assets/engines/stockfish/bin/"
+            normalized_path = detected.replace("\\", "/")
+            if stockfish_bin_marker in normalized_path:
+                self.log(f"已加载项目内置 Stockfish: {detected}")
+            else:
+                self.log(f"已自动探测到 Stockfish: {detected}")
 
     def log(self, text: str) -> None:
         now = datetime.now().strftime("%H:%M:%S")
@@ -395,7 +412,7 @@ class ChessClientApp:
         try:
             move = self.ai_orchestrator.choose_move(self.game.board)
         except FileNotFoundError:
-            self.log("Stockfish 未找到。请修改 settings.json 的 ai.stockfish_path")
+            self.log("Stockfish 未找到（内置与系统均不可用）。请检查 settings.json 的 ai.stockfish_path")
             return
         except Exception as exc:
             self.log(f"AI 计算失败: {exc}")
@@ -735,12 +752,14 @@ class ChessClientApp:
             self.screen,
             self.game.board,
             ui_theme,
-            self.theme_manager.piece_symbols(),
+            self.theme_manager.piece_symbols(use_unicode=self.use_unicode_pieces),
             self.selected_square,
             self.legal_targets,
             self.last_move,
             flipped=(self.mode == "online" and my_color == "black"),
             piece_font=self.piece_font,
+            use_unicode_pieces=self.use_unicode_pieces,
+            piece_style=self.theme_manager.piece_style(),
         )
 
         title = "本地双人"

@@ -8,3 +8,5 @@ __pycache__/
 *.pyd
 *.log
 .DS_Store
+assets/engines/stockfish/bin/*/stockfish
+assets/engines/stockfish/bin/*/stockfish.exe
