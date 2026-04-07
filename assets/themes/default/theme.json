@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "name": "default",
+    "display_name": "Default Placeholder Theme"
+  },
+  "colors": {
+    "background": [26, 34, 44],
+    "light_square": [232, 235, 239],
+    "dark_square": [105, 146, 165],
+    "selected": [250, 181, 33],
+    "legal_hint": [35, 180, 90],
+    "last_move": [255, 121, 89],
+    "text": [248, 249, 250],
+    "panel_bg": [35, 46, 60]
+  },
+  "pieces": {
+    "piece.white.king": "♔",
+    "piece.white.queen": "♕",
+    "piece.white.rook": "♖",
+    "piece.white.bishop": "♗",
+    "piece.white.knight": "♘",
+    "piece.white.pawn": "♙",
+    "piece.black.king": "♚",
+    "piece.black.queen": "♛",
+    "piece.black.rook": "♜",
+    "piece.black.bishop": "♝",
+    "piece.black.knight": "♞",
+    "piece.black.pawn": "♟"
+  },
+  "audio": {
+    "sfx.move": "sfx_move.wav",
+    "sfx.capture": "sfx_capture.wav",
+    "bgm.menu": "bgm_menu.wav"
+  }
+}

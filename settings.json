@@ -1,0 +1,38 @@
+{
+  "window": {
+    "width": 1080,
+    "height": 760,
+    "fps": 60
+  },
+  "audio": {
+    "master_volume": 0.6,
+    "sfx_volume": 0.75,
+    "bgm_volume": 0.35,
+    "enabled": true
+  },
+  "theme": {
+    "name": "default"
+  },
+  "ai": {
+    "mode": "simple",
+    "simple_depth": 2,
+    "stockfish_path": "",
+    "stockfish_movetime_ms": 350,
+    "manual_fallback": true
+  },
+  "network": {
+    "default_host": "127.0.0.1",
+    "default_port": 8765,
+    "room_id": ""
+  },
+  "time_control": {
+    "base_seconds": 300,
+    "increment_seconds": 3,
+    "presets": [
+      [180, 0],
+      [300, 3],
+      [600, 5],
+      [900, 10]
+    ]
+  }
+}
